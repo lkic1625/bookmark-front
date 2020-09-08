@@ -22,7 +22,7 @@ class CatgAdapter(val items: ArrayList<MyCatg>) : RecyclerView.Adapter<CatgAdapt
 
     override fun onBindViewHolder(p0: ViewHolder, p1: Int) {
         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        p0.catg_name.text = items.get(p1).toString()
+        p0.catg_name.text = items.get(p1).name
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

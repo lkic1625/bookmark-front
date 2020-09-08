@@ -134,7 +134,7 @@ class StartLoadingActivity : AppCompatActivity() {
         db.collection("catg").get().addOnCompleteListener {
             if (it.isSuccessful) {
                 for (document in it.result!!) {
-                    category.add(MyCatg(document.data["code"].toString(), document.data["name"].toString()))
+                    category.add(MyCatg(document.data["code"].toString().toInt(), document.data["name"].toString()))
                 }
                 handler.sendEmptyMessage(CATG_STOP)
             } else {//실패했으면

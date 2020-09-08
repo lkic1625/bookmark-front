@@ -3,19 +3,19 @@ package com.example.mybook
 import android.os.Parcel
 import android.os.Parcelable
 
-data class MyCatg(val code: String, val name: String) : Parcelable{
+data class MyCatg(val code: Int, val name: String) : Parcelable{
     constructor(parcel: Parcel) : this(
-        parcel.readString(),
+        parcel.readInt(),
         parcel.readString()
     ) {
     }
 
     override fun toString(): String {
-        return name
+        return code.toString()
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(code)
+        parcel.writeInt(code)
         parcel.writeString(name)
     }
 

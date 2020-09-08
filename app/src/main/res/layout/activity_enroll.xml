@@ -82,18 +82,18 @@
                 android:layout_gravity="center"
                 android:layout_marginBottom="30dp"
                 android:layout_marginTop="30dp"/>
-        <Button
-                android:id="@+id/enrol_btn"
 
-                android:fontFamily="@font/ns_regular"
-                android:textColor="#3b3838"
-                android:textSize="24dp"
-                android:layout_gravity="center"
-                android:text="Sign Up"
-                android:layout_width="350dp"
-                android:background="@drawable/login_button_back"
-                android:layout_height="50dp"
-                android:onClick="clickEnroll"/>
+        <Button
+            android:id="@+id/btn_signUp"
+
+            android:layout_width="350dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:background="@drawable/login_button_back"
+            android:fontFamily="@font/ns_regular"
+            android:text="Sign Up"
+            android:textColor="#3b3838"
+            android:textSize="24dp" />
     </LinearLayout>
     <Space android:layout_width="match_parent" android:layout_height="0dp"
            android:layout_weight="2"/>

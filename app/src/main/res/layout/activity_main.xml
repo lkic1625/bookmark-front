@@ -35,7 +35,7 @@
                 android:inputType="textEmailAddress"
                 android:hint="E-Mail"
                 android:ems="10"
-                android:id="@+id/user_id"
+                android:id="@+id/edit_email"
                 android:background="@drawable/login_input_back"
                 android:paddingLeft="15dp"
                 android:textColorHint="#3b3838"
@@ -54,7 +54,7 @@
                 android:paddingLeft="15dp"
                 android:fontFamily="@font/ns_light"
                 android:hint="password"
-                android:id="@+id/user_pass"
+                android:id="@+id/edit_pw"
                 android:background="@drawable/login_input_back"/>
         <Button
                 android:fontFamily="@font/ns_regular"
@@ -66,7 +66,7 @@
                 android:background="@drawable/login_button_back"
                 android:layout_height="50dp"
                 android:id="@+id/login_btn"
-                android:onClick="clickLogin"
+
         />
         <Button
                 android:layout_marginTop="5dp"
