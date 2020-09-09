@@ -12,12 +12,20 @@ import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.GridLayout
+import android.widget.Toast
+import com.example.mybook.retrofit.AuthServiceGenerator
+import com.example.mybook.retrofit.BookmarkServer
+import com.example.mybook.retrofit.ResponsePOJO
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.text.FirebaseVisionCloudTextRecognizerOptions
 import com.google.firebase.ml.vision.text.FirebaseVisionText
 import kotlinx.android.synthetic.main.activity_write.*
+import org.json.JSONArray
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -27,7 +35,9 @@ class WriteActivity : AppCompatActivity() {
 
     val SELECT_IMAGE = 9999
     var my_no=-1
+    lateinit var loggedInUser:User
     lateinit var uri_ocr:Uri
+    lateinit var token:String
     var uri_Pic:Uri=Uri.parse("")
     lateinit var enrol_book:Book
     var isOCR=false
@@ -39,6 +49,8 @@ class WriteActivity : AppCompatActivity() {
     var myMonth=""
     var myDay=""
 
+    val ERROR_CODE_RETROFIT = "retrofit_error"
+    val NORMAL_CODE_RETROFIT = "retrofit_normal"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,7 +127,9 @@ class WriteActivity : AppCompatActivity() {
 
     fun init(){
         fadapter= sbookAdapter(searchlist,clickFun)
-        my_no = getIntent().getIntExtra("USERNO",-1)
+        loggedInUser = intent.getParcelableExtra("USERNO")
+        my_no = loggedInUser.no
+        token = intent.getStringExtra("token")
         initlay()
         showDatePicker()
     }
@@ -205,33 +219,33 @@ class WriteActivity : AppCompatActivity() {
             }
     }
 
+
+
     fun submitPost(view: View?){//게시글 등록
-        var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),"",enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
-        var db=FirebaseFirestore.getInstance()
-        var input:Map<String,String>
-        input = HashMap()
-        input.put("content",input_content.text.toString())
-        input.put("u_no",my_no.toString())
-        input.put("uri", uri_Pic.toString())
-        input.put("isbn",enrol_book.isbn)
-        input.put("author",enrol_book.author)
-        input.put("bname",enrol_book.title)
-        input.put("publisher",enrol_book.publisher)
-        input.put("imageLink",enrol_book.imageLink)
-        input.put("like_no", "")
-        input.put("date",myYear+myMonth+myDay)
-        db.collection("post").add(input)
-            .addOnSuccessListener {
-                Log.d("SUCCESS","게시글 등록 성공")
-            }
-            .addOnFailureListener {
-                Log.d("FAULURE","게시글 등록 실패")
-            }
-        var intent = Intent(this,FeedActivity::class.java)
-        //put해주기 나중에
-        intent.putExtra("UPLOAD",tmpFeed)//현재 업로드한 피드 추가해주기
-        setResult(RESULT_OK,intent)
-        finish()
+        feedUpload()
+       //        var db=FirebaseFirestore.getInstance()
+//        var input:Map<String,String>
+//        input = HashMap()
+//        input.put("content",input_content.text.toString())
+//        input.put("u_no",my_no.toString())
+//        input.put("uri", uri_Pic.toString())
+//        input.put("isbn",enrol_book.isbn)
+//        input.put("author",enrol_book.author)
+//        input.put("bname",enrol_book.title)
+//        input.put("publisher",enrol_book.publisher)
+//        input.put("imageLink",enrol_book.imageLink)
+//        input.put("like_no", "")
+//        input.put("date",myYear+myMonth+myDay)
+//        db.collection("post").add(input)
+//            .addOnSuccessListener {
+//                Log.d("SUCCESS","게시글 등록 성공")
+//            }
+//            .addOnFailureListener {
+//                Log.d("FAULURE","게시글 등록 실패")
+//            }
+
+
+
     }
 
     fun OCRBtn(view:View?){
@@ -240,6 +254,50 @@ class WriteActivity : AppCompatActivity() {
         intent.type = android.provider.MediaStore.Images.Media.CONTENT_TYPE
         intent.data = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         startActivityForResult(intent, SELECT_IMAGE)
+    }
+
+    fun feedUpload(){
+        var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),"",enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
+
+        val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
+        //get user's categories
+        AuthService.uploadFeed(
+            user_id = my_no,
+            author = loggedInUser.name,
+            contents = input_content.text.toString(),
+            imgUri = uri_Pic.toString(),
+            book_author = enrol_book.author,
+            book_name =  enrol_book.title,
+            book_isbn = enrol_book.isbn,
+            book_publisher = enrol_book.publisher
+        ).enqueue(
+            object : Callback<ResponsePOJO> {
+                override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
+                    Log.e(ERROR_CODE_RETROFIT, t.toString())
+                    Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                }
+                override fun onResponse(call: Call<ResponsePOJO>, response: Response<ResponsePOJO>) {
+                    if (response.code() == 200) {
+                        val res = response.body()
+                        Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
+                        if (res != null) {
+                            Log.v(NORMAL_CODE_RETROFIT, res.toString())
+                            var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),"",enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
+                            var intent = Intent(applicationContext ,FeedActivity::class.java)
+                            //put해주기 나중에
+                            intent.putExtra("UPLOAD",tmpFeed)//현재 업로드한 피드 추가해주기
+                            setResult(RESULT_OK,intent)
+                            finish()
+                        } else {
+                            Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                        }
+                    }
+                    else {
+                        Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                        Log.e(ERROR_CODE_RETROFIT, response.message())
+                    }
+                }
+            })
     }
 
     fun PicBtn(view:View?){//사진 업로드

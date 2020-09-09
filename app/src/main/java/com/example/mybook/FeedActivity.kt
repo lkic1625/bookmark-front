@@ -16,7 +16,14 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
+import com.example.mybook.retrofit.AuthServiceGenerator
+import com.example.mybook.retrofit.BookmarkServer
+import com.example.mybook.retrofit.ResponsePOJO
 import me.relex.circleindicator.CircleIndicator
+import org.json.JSONArray
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class FeedActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -36,9 +43,12 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var fab: FloatingActionButton
     lateinit var fab1: FloatingActionButton
     lateinit var fab2: FloatingActionButton
+    lateinit var token: String
 
     private var isFabOpen = false
 
+    val ERROR_CODE_RETROFIT = "retrofit_error"
+    val NORMAL_CODE_RETROFIT = "retrofit_normal"
     val SELECT_IMAGE = 9999
     val USE_INTERNET = 8888
     val REQ_CODE_SPEECH_INPUT = 5555
@@ -80,17 +90,25 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     fun init(){
-        my = getIntent().getParcelableExtra("MY")
-        user = getIntent().getParcelableArrayListExtra("USER")
-        allFeed = getIntent().getParcelableArrayListExtra("FEED")//모든 피드정보
-        myFeedArr = getIntent().getParcelableArrayListExtra("MYFEED")//나의 피드 정보
-        myBook = getIntent().getParcelableArrayListExtra("MYBOOK")//나의 책 정보
-        letter = getIntent().getParcelableArrayListExtra("LETTER")//글귀정보
-        allwant = getIntent().getParcelableArrayListExtra("ALLWANT")//모든 사람들의 찜 목록
-        want = getIntent().getParcelableArrayListExtra("WANT")//내가 찜한 목록
+        my = intent.getParcelableExtra("MY")
+        token = intent.getStringExtra("token")
+        user = ArrayList()
+        allFeed = ArrayList()
+        myFeedArr = ArrayList()
+        myBook = ArrayList()
+        letter = ArrayList()
+        allwant = ArrayList()
+        want = ArrayList()
+//        user = getIntent().getParcelableArrayListExtra("USER")
+//        allFeed = getIntent().getParcelableArrayListExtra("FEED")//모든 피드정보
+//        myFeedArr = getIntent().getParcelableArrayListExtra("MYFEED")//나의 피드 정보
+//        myBook = getIntent().getParcelableArrayListExtra("MYBOOK")//나의 책 정보
+//        letter = getIntent().getParcelableArrayListExtra("LETTER")//글귀정보
+//        allwant = getIntent().getParcelableArrayListExtra("ALLWANT")//모든 사람들의 찜 목록
+//        want = getIntent().getParcelableArrayListExtra("WANT")//내가 찜한 목록
 
         myFeedMake = mainfeed()
-        myProfile=mypage()
+        myProfile = mypage()
         searchMake=searchpage()
         calendar= CalendarFragment()
 
@@ -171,7 +189,8 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
             R.id.fab1->{
                 anim()//글쓰기 인텐트로 넘어감
                 var intent= Intent(getApplicationContext(),WriteActivity::class.java)
-                intent.putExtra("USERNO",my.no)
+                intent.putExtra("USERNO", my)
+                intent.putExtra("token", token)
                 startActivityForResult(intent,WRITE_CODE)
             }
             R.id.fab2->{
@@ -268,39 +287,45 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
 
     fun makeFeed(){//나에게 맞춰 피드를 만들어줌
         //나의 카테고리정보
-        var catg = my.catg
-        var catg_arr = catg.split(" ")//공백으로 스플릿
 
-        for(i in 0 until user.size){
-            var feedNo = -1
-            var u_catg = user[i].catg
-            var u_catg_arr = u_catg.split(" ")//다른 사람의 카테고리
-            var same_catg = false
-            brakPoint@for(j in 0 until u_catg_arr.size){
-                for(k in 0 until catg_arr.size){
-                    if(u_catg_arr[j] == catg_arr[k] && catg_arr[k]!=""){//같은 카테고리가 있으면 보여줌
-                        feedNo = user[i].no//나와 비슷한 카테고리를 가진 사람의 인덱스 번호
-                        same_catg = true
-                        break@brakPoint
+        val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
+        //get user's categories
+        AuthService.getFeedsByUserId(my.no).enqueue(
+            object : Callback<ResponsePOJO> {
+                override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
+                    Log.e(ERROR_CODE_RETROFIT, t.toString())
+                    Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+
+                }
+                override fun onResponse(call: Call<ResponsePOJO>, response: Response<ResponsePOJO>) {
+                    if (response.code() == 200) {
+                        val res = response.body()
+                        if (res != null) {
+                            val jsonArray = JSONArray(res.payload)
+                            for(i in 0..jsonArray.length() - 1){
+                                myFeedArr.add(
+                                    MyFeed(
+                                        no = jsonArray.getJSONObject(i).getInt("id"),
+                                        author = jsonArray.getJSONObject(i).getString("author"),
+                                        contents = jsonArray.getJSONObject(i).getString("contents"),
+                                        imgsrc = jsonArray.getJSONObject(i).getString("imgUri"),
+                                        date = jsonArray.getJSONObject(i).getString("createdAt")
+                                        )
+                                )
+                            }
+                            Log.v(NORMAL_CODE_RETROFIT, res.toString())
+
+                        } else {
+                            Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                        }
+                    }
+                    else {
+                        Toast.makeText(applicationContext, "서버 오류로 피드 목록을 가져오는 데 실패했습니다..", Toast.LENGTH_SHORT).show()
+                        Log.e(ERROR_CODE_RETROFIT, response.message())
                     }
                 }
-            }
-            if(same_catg){
-                for(u in 0 until allFeed.size){
-                    if(allFeed[u].no == feedNo){
-                        myFeedArr.add(allFeed[u])//나와 비슷한 카테고리의 피드를 담음
-                    }
-                }
-            }
-        }
-        //글귀 넣어주기
-        var j = 0
-        for(i in 0 until myFeedArr.size){
-            if(i!=0&&i % 3 == 0 && j <= (letter.size-1)){
-                myFeedArr.add(i,letter[j++])
-            }
-        }
-
+            })
+        myFeedArr
         myFeedMake.initlayout()
         //myFeedMake.adapter.notifyDataSetChanged
         //책정보 다시 넘겨주기
@@ -308,4 +333,117 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
         //캘린더에 내 책정보 넘겨주기
         calendar.myBook = myBook
     }
+
+    fun getCategoryByUserId(user_id: Int) {
+
+        val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
+        //get user's categories
+        AuthService.getCategoryById(user_id).enqueue(
+            object : Callback<ResponsePOJO> {
+                override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
+                    Log.e(ERROR_CODE_RETROFIT, t.toString())
+                    Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT)
+                        .show()
+                }
+                override fun onResponse(
+                    call: Call<ResponsePOJO>,
+                    response: Response<ResponsePOJO>
+                ) {
+                    if (response.code() == 200) {
+                        val res = response.body()
+                        if (res != null) {
+                            val jsonArray = JSONArray(res.payload)
+                            for(i in 0..jsonArray.length() - 1){
+                                val id = jsonArray.getJSONObject(i).getInt("id")
+                                val name = jsonArray.getJSONObject(i).getString("name")
+
+                            }
+                            Log.v(NORMAL_CODE_RETROFIT, res.payload)
+                        } else {
+                            Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                        }
+                    } else if (response.code() == 204) {
+                        Log.e(ERROR_CODE_RETROFIT, response.message())
+                    } else {
+                        Log.e(ERROR_CODE_RETROFIT, response.message())
+                    }
+                }
+            })
+
+
+    }
+    fun getFeedsByUserId(user_id: Int){
+
+        val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
+        //get user's categories
+        AuthService.getFeedsByUserId(user_id).enqueue(
+            object : Callback<ResponsePOJO> {
+                override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
+                    Log.e(ERROR_CODE_RETROFIT, t.toString())
+                    Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+
+                }
+                override fun onResponse(call: Call<ResponsePOJO>, response: Response<ResponsePOJO>) {
+                    if (response.code() == 200) {
+                        val res = response.body()
+                        Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
+                        if (res != null) {
+                            val jsonArray = JSONArray(res.payload)
+                            for(i in 0..jsonArray.length() - 1){
+
+                            }
+                            Log.v(NORMAL_CODE_RETROFIT, res.toString())
+
+                        } else {
+                            Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                        }
+                    } else if (response.code() == 401){
+                        Toast.makeText(applicationContext, "존재하지 않는 사용자입니다..", Toast.LENGTH_SHORT).show()
+                        Log.e(ERROR_CODE_RETROFIT, "등록되지 않은 유저")
+                    }
+                    else {
+                        Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                        Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                    }
+                }
+            })
+
+    }
+    fun getBooksByUserId(user_id: Int){
+        val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
+        //get user's categories
+        AuthService.getBooksByUserId(user_id).enqueue(
+            object : Callback<ResponsePOJO> {
+                override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
+                    Log.e(ERROR_CODE_RETROFIT, t.toString())
+                    Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+
+                }
+                override fun onResponse(call: Call<ResponsePOJO>, response: Response<ResponsePOJO>) {
+                    if (response.code() == 200) {
+                        val res = response.body()
+                        Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
+                        if (res != null) {
+                            val jsonArray = JSONArray(res.payload)
+                            for(i in 0..jsonArray.length() - 1){
+
+                            }
+                            Log.v(NORMAL_CODE_RETROFIT, res.toString())
+
+                        } else {
+                            Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                        }
+                    } else if (response.code() == 401){
+                        Toast.makeText(applicationContext, "존재하지 않는 사용자입니다..", Toast.LENGTH_SHORT).show()
+                        Log.e(ERROR_CODE_RETROFIT, "등록되지 않은 유저")
+                    }
+                    else {
+                        Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                        Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                    }
+                }
+            })
+
+    }
+
 }

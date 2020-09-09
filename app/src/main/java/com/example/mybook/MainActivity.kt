@@ -28,6 +28,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -39,19 +41,22 @@ import java.security.NoSuchAlgorithmException
 class MainActivity : AppCompatActivity() {//로그인 액티비티
 
 
-    var loggedInUserId:Int = -1
     var token = ""
-    val ERROR_CODE_RETROFIT = "retrofit"
+    val ERROR_CODE_RETROFIT = "retrofit_error"
+    val NORMAL_CODE_RETROFIT = "retrofit_normal"
+    val loggedInUser = User()
     lateinit var REST_API:BookmarkServer
     lateinit var user:ArrayList<User>
+    lateinit var user_category:MutableList<MyCatg>
+    lateinit var user_feed:MutableList<MyFeed>
+    lateinit var user_book:MutableList<Book>
 
-    lateinit var user_map:MutableMap<Int,User>
-    lateinit var feed:ArrayList<MyFeed>
-    lateinit var letter:ArrayList<MyFeed>//글귀
-    lateinit var category:ArrayList<MyCatg>
-    lateinit var allwant:ArrayList<MyFeed>
-    lateinit var db: FirebaseFirestore
-    lateinit var tmp:User
+//    lateinit var user_map:MutableMap<Int,User>
+//    lateinit var feed:ArrayList<MyFeed>
+//    lateinit var letter:ArrayList<MyFeed>//글귀
+//    lateinit var category:ArrayList<MyCatg>
+//    lateinit var allwant:ArrayList<MyFeed>
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +66,9 @@ class MainActivity : AppCompatActivity() {//로그인 액티비티
 
     fun init(){
         REST_API = RetrofitUtility.getServer()
+        user_book = mutableListOf()
+        user_category = mutableListOf()
+        user_feed = mutableListOf()
         //set on click listener
         enroll_page.setOnClickListener {
             clickJoin()
@@ -88,17 +96,23 @@ class MainActivity : AppCompatActivity() {//로그인 액티비티
                      val res = response.body()
                      Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
                      if (res != null) {
-                         loggedInUserId = res.payload.toInt()
+                         val jsonObj = JSONObject(res.payload)
+                         loggedInUser.eEmail = jsonObj.getString("email")
+                         loggedInUser.name = jsonObj.getString("name")
+                         loggedInUser.no = jsonObj.getInt("id")
+
+
                          token = res.token
-                         Log.v("retrofit", res.toString() + "login complete")
+                         Log.v(NORMAL_CODE_RETROFIT, res.toString() + "login complete")
+                         makeFeed()
 
                      } else {
                          Log.e(ERROR_CODE_RETROFIT, "response body is null")
                      }
-                     makeFeed()
+
                  } else if (response.code() == 401){
                      Toast.makeText(applicationContext, "존재하지 않는 사용자입니다..", Toast.LENGTH_SHORT).show()
-                 Log.e(ERROR_CODE_RETROFIT, "등록되지 않은 유저")
+                     Log.e(ERROR_CODE_RETROFIT, "등록되지 않은 유저")
                  }
                  else {
                      Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
@@ -113,79 +127,7 @@ class MainActivity : AppCompatActivity() {//로그인 액티비티
         startActivity(intent)
     }
 
-    fun getCategoryByUserId(user_id: Int): MutableList<MyCatg> {
-        val ret = mutableListOf<MyCatg>()
-        val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
-        //get user's categories
-        AuthService.getCategoryById(user_id).enqueue(
-            object : Callback<ResponsePOJO> {
-                override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
-                    Log.e(ERROR_CODE_RETROFIT, t.toString())
-                    Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT)
-                        .show()
-                }
-
-                override fun onResponse(
-                    call: Call<ResponsePOJO>,
-                    response: Response<ResponsePOJO>
-                ) {
-                    if (response.code() == 200) {
-                        val res = response.body()
-                        if (res != null) {
-
-                            Log.v("retrofit", res.toString() + "categories")
-                        } else {
-                            Log.e(ERROR_CODE_RETROFIT, "response body is null")
-                        }
-                        makeFeed()
-                    } else if (response.code() == 204) {
-                        Log.e(ERROR_CODE_RETROFIT, response.message())
-                    } else {
-                        Log.e(ERROR_CODE_RETROFIT, response.message())
-                    }
-                }
-            })
-        return ret
-
-    }
-
-    fun getBooksByUserId(user_id: Int): MutableList<Book>{
-        val ret = mutableListOf<Book>()
-        val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
-        //get user's categories
-        AuthService.getBooksByUserId(user_id).enqueue(
-            object : Callback<ResponsePOJO> {
-                override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
-                    Log.e(ERROR_CODE_RETROFIT, t.toString())
-                    Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-
-                }
-                override fun onResponse(call: Call<ResponsePOJO>, response: Response<ResponsePOJO>) {
-                    if (response.code() == 200) {
-                        val res = response.body()
-                        Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
-                        if (res != null) {
-                            Log.v("retrofit", res.toString() + "login complete")
-
-                        } else {
-                            Log.e(ERROR_CODE_RETROFIT, "response body is null")
-                        }
-                        makeFeed()
-                    } else if (response.code() == 401){
-                        Toast.makeText(applicationContext, "존재하지 않는 사용자입니다..", Toast.LENGTH_SHORT).show()
-                        Log.e(ERROR_CODE_RETROFIT, "등록되지 않은 유저")
-                    }
-                    else {
-                        Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-                        Log.e(ERROR_CODE_RETROFIT, "response body is null")
-                    }
-                }
-            })
-        return ret
-    }
-
     fun makeFeed(){//나에게 맞춰 피드를 만들어줌
-        getCategoryByUserId(loggedInUserId)
 //        var myBook:ArrayList<MyFeed>//나의 책 목록
 //        var myFeedArr:ArrayList<MyFeed>
 //
@@ -194,7 +136,7 @@ class MainActivity : AppCompatActivity() {//로그인 액티비티
 //        myBook = arrayListOf()
 //        myFeedArr = arrayListOf()
 //        want = arrayListOf()
-//
+
 //
 //        var catg = user_map[user_id]!!.catg//현재 사용자의 카테고리 정보
 //        var catg_arr = catg.split(" ")//공백으로 스플릿
@@ -241,17 +183,19 @@ class MainActivity : AppCompatActivity() {//로그인 액티비티
 //                want.add(allwant[i])
 //            }
 //        }
-//
-//        var intent = Intent(this,FeedActivity::class.java)
+
+
+        var intent = Intent(this,FeedActivity::class.java)
 //        intent.putParcelableArrayListExtra("MYFEED",myFeedArr)//피드정보를 넘겨줌
 //        intent.putParcelableArrayListExtra("FEED",feed)//모든피드
 //        intent.putParcelableArrayListExtra("MYBOOK",myBook)//나의 책 정보를 넘겨줌
 //        intent.putParcelableArrayListExtra("USER",user)//유저의 정보 넘겨줌(피드 정리할때)
 //        intent.putParcelableArrayListExtra("LETTER",letter)//글귀 정보를 넘겨줌
-//        intent.putExtra("MY",user_map[user_id])//나의 정보를 넘겨줌
+        intent.putExtra("MY", loggedInUser)//나의 정보를 넘겨줌
+        intent.putExtra("token", token)
 //        intent.putParcelableArrayListExtra("ALLWANT",allwant)//모든 사람들의 찜 목록을 넘겨줌
 //        intent.putParcelableArrayListExtra("WANT",want)//내가 찜한 목록을 넘겨줌
-//        startActivity(intent)
+        startActivity(intent)
     }
 
 }

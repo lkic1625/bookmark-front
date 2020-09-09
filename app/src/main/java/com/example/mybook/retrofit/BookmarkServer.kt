@@ -21,6 +21,22 @@ interface BookmarkServer {
         @Field("user_pw") pw: String
     ): Call<ResponsePOJO>
 
+    @POST("v1/board/feeds")
+    @FormUrlEncoded
+    fun uploadFeed(
+        @Field("user_id") user_id: Int,
+        @Field("feed_author") author: String,
+        @Field("feed_contents") contents: String,
+        @Field("feed_imgUri") imgUri: String,
+        @Field("book_author") book_author: String,
+        @Field("book_name") book_name:String,
+        @Field("book_isbn") book_isbn:String,
+        @Field("book_publisher") book_publisher:String
+        ): Call<ResponsePOJO>
+
+
+
+
     @GET("v1/board/categories/user/{user_id}")
     fun getCategoryById(
         @Path("user_id") id:Int
@@ -46,6 +62,8 @@ interface BookmarkServer {
     fun getBooksByUserId(
         @Path("user_id") id:Int
     ): Call<ResponsePOJO>
+
+
 
 
 

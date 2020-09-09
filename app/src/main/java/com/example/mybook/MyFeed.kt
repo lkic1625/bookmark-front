@@ -3,7 +3,7 @@ package com.example.mybook
 import android.os.Parcel
 import android.os.Parcelable
 
-data class MyFeed (var no:Int,var imgsrc:String,var bname:String,var author:String,var publisher:String,var contents:String,var like:String,var imageLink:String,var isbn:String,var date:String):Parcelable{
+data class MyFeed (var no:Int = 0,var imgsrc:String = "",var bname:String = "",var author:String= "",var publisher:String="",var contents:String="",var like:String="",var imageLink:String="",var isbn:String ="",var date:String=""):Parcelable{
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readString(),
