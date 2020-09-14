@@ -2,41 +2,22 @@ package com.example.mybook
 
 
 
-import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.app.AppCompatActivity
-import android.util.Base64
 import android.util.Log
 import android.widget.Toast
+import com.example.mybook.model.Book
+import com.example.mybook.model.MyCatg
+import com.example.mybook.model.MyFeed
+import com.example.mybook.model.User
 import com.example.mybook.retrofit.*
 import com.example.mybook.security.Hashing
-import com.google.firebase.firestore.FirebaseFirestore
-import com.kakao.auth.ISessionCallback
-import com.kakao.auth.Session
-import com.kakao.network.ErrorResult
-import com.kakao.usermgmt.UserManagement
-import com.kakao.usermgmt.callback.MeV2ResponseCallback
-import com.kakao.usermgmt.response.MeV2Response
-import com.kakao.util.exception.KakaoException
-import com.kakao.util.helper.Utility.getPackageInfo
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.io.ByteArrayInputStream
-import java.security.DigestInputStream
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 
 class MainActivity : AppCompatActivity() {//로그인 액티비티
 

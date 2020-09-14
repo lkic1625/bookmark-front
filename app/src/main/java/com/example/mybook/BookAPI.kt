@@ -1,6 +1,7 @@
 package com.example.mybook
 
 import android.util.Log
+import com.example.mybook.model.Book
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStreamReader
@@ -58,7 +59,8 @@ class BookAPI(){
                         XmlPullParser.END_TAG ->{
                             endTag = xpp.name
                             if(endTag == "item")
-                                list.add(Book(
+                                list.add(
+                                    Book(
                                     title = title,
                                     link = link,
                                     imageLink = image,
@@ -69,7 +71,8 @@ class BookAPI(){
                                     pubdate = pubdate,
                                     isbn = isbn,
                                     description = description
-                                ))
+                                )
+                                )
                         }
                         XmlPullParser.TEXT ->{
                             val text = xpp.text
@@ -167,7 +170,8 @@ class BookAPI(){
                         XmlPullParser.END_TAG ->{
                             endTag = xpp.name
                             if(endTag == "item")
-                                list.add(Book(
+                                list.add(
+                                    Book(
                                     title = title,
                                     link = link,
                                     imageLink = image,
@@ -178,7 +182,8 @@ class BookAPI(){
                                     pubdate = pubdate,
                                     isbn = isbn,
                                     description = description
-                                ))
+                                )
+                                )
                         }
                         XmlPullParser.TEXT ->{
                             val text = xpp.text

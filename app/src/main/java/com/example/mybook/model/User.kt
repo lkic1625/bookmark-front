@@ -1,4 +1,4 @@
-package com.example.mybook
+package com.example.mybook.model
 
 import android.net.Uri
 import android.os.Parcel

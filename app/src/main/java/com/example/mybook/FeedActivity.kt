@@ -16,9 +16,12 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
+import com.example.mybook.model.MyFeed
+import com.example.mybook.model.User
 import com.example.mybook.retrofit.AuthServiceGenerator
 import com.example.mybook.retrofit.BookmarkServer
 import com.example.mybook.retrofit.ResponsePOJO
+import com.example.mybook.retrofit.ServiceExecutor
 import me.relex.circleindicator.CircleIndicator
 import org.json.JSONArray
 import retrofit2.Call
@@ -28,7 +31,7 @@ import retrofit2.Response
 class FeedActivity : AppCompatActivity(), View.OnClickListener {
 
     lateinit var adapterVeiwPager: FragmentPagerAdapter
-    lateinit var my:User
+    lateinit var my: User
     lateinit var user:ArrayList<User>//모든 피드
     lateinit var allFeed:ArrayList<MyFeed>//모든 피드
     lateinit var myFeedArr:ArrayList<MyFeed>
@@ -99,6 +102,47 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
         letter = ArrayList()
         allwant = ArrayList()
         want = ArrayList()
+
+        ServiceExecutor.getFeedsByUserId(token, my.no,
+            {response ->
+                Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT)
+                    .show()
+            },
+            {response ->
+                if (response.code() == 200) {
+                    val res = response.body()
+                    Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
+                    if (res != null) {
+                        val jsonArray = JSONArray(res.payload)
+                        for(i in 0..jsonArray.length() - 1){
+                            myFeedArr.add(
+                                MyFeed(
+                                    no = jsonArray.getJSONObject(i).getInt("id"),
+                                    author = jsonArray.getJSONObject(i).getString("author"),
+                                    contents = jsonArray.getJSONObject(i).getString("contents"),
+                                    imgsrc = jsonArray.getJSONObject(i).getString("imgUri"),
+                                    date = jsonArray.getJSONObject(i).getString("createdAt"),
+                                    user_id =  my.no,
+                                    like = jsonArray.getJSONObject(i).getInt("like")
+                                )
+                            )
+                        }
+                        Log.v(NORMAL_CODE_RETROFIT, res.toString())
+
+                    } else {
+                        Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                    }
+                } else if (response.code() == 401){
+                    Log.e(ERROR_CODE_RETROFIT, "등록되지 않은 유저")
+                }
+                else {
+                    Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                }
+            }
+        )
+        getFeedsByUserId(user_id = my.no)
+        getBooksByUserId(user_id = my.no)
+
 //        user = getIntent().getParcelableArrayListExtra("USER")
 //        allFeed = getIntent().getParcelableArrayListExtra("FEED")//모든 피드정보
 //        myFeedArr = getIntent().getParcelableArrayListExtra("MYFEED")//나의 피드 정보
@@ -111,6 +155,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
         myProfile = mypage()
         searchMake=searchpage()
         calendar= CalendarFragment()
+
 
         Log.d("USERINFO",my.name)
     }
@@ -234,7 +279,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
                 //mainfeed
                 1->{
                     Log.d("PAGER",vpPager.currentItem.toString())
-                    myFeedMake = mainfeed.makeFeed(myFeedArr,my)
+                    myFeedMake = mainfeed.makeFeed(myFeedArr,my, token)
                     return myFeedMake
                 }
                 //mypage
@@ -259,74 +304,33 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {//글쓰기 종료되면
         super.onActivityResult(requestCode, resultCode, data)
-        var myfeed:MyFeed
+        var myfeed: MyFeed
         if(requestCode==WRITE_CODE){//게시글추가
             if(resultCode==RESULT_OK){
-               myfeed = data!!.getParcelableExtra<MyFeed>("UPLOAD") as MyFeed
-                allFeed.add(myfeed)
+                myfeed = data!!.getParcelableExtra("UPLOAD") as MyFeed
+//                allFeed.add(myfeed)
                 //나의 책목록 다시 생성
-                myBook.clear()
-                for(i in 0 until allFeed.size){
-                    if(allFeed[i].no == my.no){
-                        myBook.add(allFeed[i])//나의 책 목록
-                    }
-                }
-                myFeedArr.clear()
-                makeFeed()
+                getBooksByUserId(user_id = my.no)
+                getFeedsByUserId(user_id = my.no)
+                refresh()
             }
         }else if(requestCode == LETTER_CODE){///글귀추가 했을 때
             if(requestCode==RESULT_OK){
                myfeed = data!!.getParcelableExtra<MyFeed>("UPLOAD_LETTER") as MyFeed
                 letter.add(myfeed)
                 myFeedArr.clear()
-                makeFeed()
+                refresh()
             }
         }
 
     }
 
-    fun makeFeed(){//나에게 맞춰 피드를 만들어줌
+    fun refresh(){//나에게 맞춰 피드를 만들어줌
         //나의 카테고리정보
 
-        val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
-        //get user's categories
-        AuthService.getFeedsByUserId(my.no).enqueue(
-            object : Callback<ResponsePOJO> {
-                override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
-                    Log.e(ERROR_CODE_RETROFIT, t.toString())
-                    Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-
-                }
-                override fun onResponse(call: Call<ResponsePOJO>, response: Response<ResponsePOJO>) {
-                    if (response.code() == 200) {
-                        val res = response.body()
-                        if (res != null) {
-                            val jsonArray = JSONArray(res.payload)
-                            for(i in 0..jsonArray.length() - 1){
-                                myFeedArr.add(
-                                    MyFeed(
-                                        no = jsonArray.getJSONObject(i).getInt("id"),
-                                        author = jsonArray.getJSONObject(i).getString("author"),
-                                        contents = jsonArray.getJSONObject(i).getString("contents"),
-                                        imgsrc = jsonArray.getJSONObject(i).getString("imgUri"),
-                                        date = jsonArray.getJSONObject(i).getString("createdAt")
-                                        )
-                                )
-                            }
-                            Log.v(NORMAL_CODE_RETROFIT, res.toString())
-
-                        } else {
-                            Log.e(ERROR_CODE_RETROFIT, "response body is null")
-                        }
-                    }
-                    else {
-                        Toast.makeText(applicationContext, "서버 오류로 피드 목록을 가져오는 데 실패했습니다..", Toast.LENGTH_SHORT).show()
-                        Log.e(ERROR_CODE_RETROFIT, response.message())
-                    }
-                }
-            })
         myFeedArr
         myFeedMake.initlayout()
+        myFeedMake.adapter.notifyDataSetChanged()
         //myFeedMake.adapter.notifyDataSetChanged
         //책정보 다시 넘겨주기
         searchMake.post = allFeed
@@ -390,7 +394,17 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
                         if (res != null) {
                             val jsonArray = JSONArray(res.payload)
                             for(i in 0..jsonArray.length() - 1){
-
+                                myFeedArr.add(
+                                    MyFeed(
+                                        no = jsonArray.getJSONObject(i).getInt("id"),
+                                        author = jsonArray.getJSONObject(i).getString("author"),
+                                        contents = jsonArray.getJSONObject(i).getString("contents"),
+                                        imgsrc = jsonArray.getJSONObject(i).getString("imgUri"),
+                                        date = jsonArray.getJSONObject(i).getString("createdAt"),
+                                        user_id =  my.no,
+                                        like = jsonArray.getJSONObject(i).getInt("like")
+                                    )
+                                )
                             }
                             Log.v(NORMAL_CODE_RETROFIT, res.toString())
 
@@ -412,7 +426,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
     fun getBooksByUserId(user_id: Int){
         val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
         //get user's categories
-        AuthService.getBooksByUserId(user_id).enqueue(
+        AuthService.getFeedsByUserId(user_id).enqueue(
             object : Callback<ResponsePOJO> {
                 override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
                     Log.e(ERROR_CODE_RETROFIT, t.toString())
@@ -426,7 +440,16 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
                         if (res != null) {
                             val jsonArray = JSONArray(res.payload)
                             for(i in 0..jsonArray.length() - 1){
-
+                                myBook.add(
+                                    MyFeed(
+                                        no = jsonArray.getJSONObject(i).getInt("id"),
+                                        author = jsonArray.getJSONObject(i).getString("author"),
+                                        contents = jsonArray.getJSONObject(i).getString("contents"),
+                                        imgsrc = jsonArray.getJSONObject(i).getString("imgUri"),
+                                        date = jsonArray.getJSONObject(i).getString("createdAt"),
+                                        user_id =  my.no
+                                    )
+                                )
                             }
                             Log.v(NORMAL_CODE_RETROFIT, res.toString())
 

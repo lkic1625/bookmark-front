@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.View
 import android.view.View.GONE
 import android.widget.LinearLayout
+import com.example.mybook.model.MyFeed
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage

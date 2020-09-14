@@ -6,6 +6,9 @@ import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import com.example.mybook.model.Book
+import com.example.mybook.model.MyFeed
+import com.example.mybook.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 import com.koushikdutta.ion.Ion
 import kotlinx.android.synthetic.main.activity_look_book.*
@@ -13,9 +16,9 @@ import kotlinx.android.synthetic.main.activity_look_book.*
 class LookBookActivity : AppCompatActivity() {
 
     val client_token_key = "ae4d3f78-642b-4fd7-8501-6e101e3b39c0";
-    lateinit var searchedBook:Book
+    lateinit var searchedBook: Book
     lateinit var allPost:ArrayList<MyFeed>
-    lateinit var my:User
+    lateinit var my: User
     lateinit var want:ArrayList<MyFeed>
     lateinit var allwant:ArrayList<MyFeed>
     var postlist:ArrayList<MyFeed> = ArrayList()
@@ -81,8 +84,8 @@ class LookBookActivity : AppCompatActivity() {
             added.put("publisher",searchedBook.publisher)
             added.put("u_no",my.no.toString())
 
-            allwant.add(MyFeed(my.no,searchedBook.link,searchedBook.title,searchedBook.author,searchedBook.publisher, "","",searchedBook.imageLink,searchedBook.isbn,""))
-            want.add(MyFeed(my.no,searchedBook.link,searchedBook.title,searchedBook.author,searchedBook.publisher, "","",searchedBook.imageLink,searchedBook.isbn,""))
+            allwant.add(MyFeed(my.no,searchedBook.link,searchedBook.title,searchedBook.author,searchedBook.publisher, "",0,searchedBook.imageLink,searchedBook.isbn,""))
+            want.add(MyFeed(my.no,searchedBook.link,searchedBook.title,searchedBook.author,searchedBook.publisher, "",0,searchedBook.imageLink,searchedBook.isbn,""))
 
             db.collection("want").add(added).addOnSuccessListener {
                 Log.d("WANT추가 성공","WANT 추가 ID : "+it.id)

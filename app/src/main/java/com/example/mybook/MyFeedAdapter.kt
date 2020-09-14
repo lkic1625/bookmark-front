@@ -1,6 +1,5 @@
 package com.example.mybook
 
-import android.net.Uri
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -9,9 +8,10 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import com.example.mybook.model.MyFeed
 import com.koushikdutta.ion.Ion
 
-class MyFeedAdapter(val feed:ArrayList<MyFeed>)
+class MyFeedAdapter(val feed:ArrayList<MyFeed>, val clickFun: (position: Int) -> Unit = {})
     : RecyclerView.Adapter<MyFeedAdapter.ViewHolder>()
 {
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int): ViewHolder {
@@ -46,39 +46,23 @@ class MyFeedAdapter(val feed:ArrayList<MyFeed>)
             p0.author.text=feed.get(p1).author
             p0.publisher.text=feed.get(p1).publisher
             p0.contents.text=feed.get(p1).contents
-            var likeStr = feed.get(p1).like
+            var like = feed.get(p1).like
             if(feed.get(p1).imgsrc==""){
                 p0.bimg.visibility = GONE
             }else{
                 p0.bimg.visibility = VISIBLE
                 Ion.with(p0.bimg).load(feed.get(p1).imgsrc)
             }
-            if(likeStr==""){
-                p0.like.text = "좋아요 0"
-            }else{
-                var likeArr = likeStr.split(" ") as ArrayList<String>
-                for(i in 0 until likeArr.size){
-                    if(likeArr[i]=="")likeArr.removeAt(i)
-                }
-                p0.like.text = "좋아요 "+likeArr.size
-            }
+            p0.like.text = "좋아요 ${like}"
             p0.like.setOnClickListener {
                 //좋아요를 클릭했을 때
-                if(mainfeed.likeFeed(p1))//등록 성공
-                {
-                    var likeStr = feed.get(p1).like
-                    var likeArr = likeStr.split(" ") as ArrayList<String>
-                    for(i in 0 until likeArr.size){
-                        if(likeArr[i]=="")likeArr.removeAt(i)
-                    }
-                    p0.like.text = "좋아요 "+likeArr.size
-                }
+                this.clickFun(p1);
             }
         }
 
     }
 
-    inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView){
+    class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView){
         var bimg: ImageView
         var bname: TextView
         var author: TextView

@@ -6,9 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import com.example.mybook.model.Book
 import com.koushikdutta.ion.Ion
 
-class sbookAdapter (val sblist:ArrayList<Book>,val click:(Book)->Unit):RecyclerView.Adapter<sbookAdapter.ViewHolder>(){
+class sbookAdapter (val sblist:ArrayList<Book>, val click:(Book)->Unit):RecyclerView.Adapter<sbookAdapter.ViewHolder>(){
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int): sbookAdapter.ViewHolder {
 //        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.

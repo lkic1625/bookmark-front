@@ -1,6 +1,6 @@
 package com.example.mybook.retrofit
 
-import com.example.mybook.MyCatg
+import com.example.mybook.model.MyCatg
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -11,7 +11,7 @@ interface BookmarkServer {
         @Field("user_email") email:String,
         @Field("user_pw") pw:String,
         @Field("user_name") name:String,
-        @Field("categories") category:List<MyCatg>
+        @Field("categories") category:HashSet<MyCatg>
     ): Call<ResponsePOJO>
 
     @POST("v1/user/account/auth")
@@ -34,8 +34,12 @@ interface BookmarkServer {
         @Field("book_publisher") book_publisher:String
         ): Call<ResponsePOJO>
 
-
-
+    @POST("v1/board/feeds/like")
+    @FormUrlEncoded
+    fun like(
+       @Field("user_id") user_id: Int,
+       @Field("feed_id") feed_id: Int
+    ): Call<ResponsePOJO>
 
     @GET("v1/board/categories/user/{user_id}")
     fun getCategoryById(

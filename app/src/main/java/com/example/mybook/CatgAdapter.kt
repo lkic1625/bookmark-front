@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.example.mybook.model.MyCatg
 
 class CatgAdapter(val items: ArrayList<MyCatg>) : RecyclerView.Adapter<CatgAdapter.ViewHolder>() {
 
@@ -38,7 +39,7 @@ class CatgAdapter(val items: ArrayList<MyCatg>) : RecyclerView.Adapter<CatgAdapt
     }
 
     interface OnItemClickListener{
-        fun OnItemClick(holder: ViewHolder, view:View, data:MyCatg, position: Int)
+        fun OnItemClick(holder: ViewHolder, view:View, data: MyCatg, position: Int)
     }
 
 }

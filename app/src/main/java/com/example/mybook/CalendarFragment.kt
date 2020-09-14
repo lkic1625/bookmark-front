@@ -8,6 +8,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.example.mybook.model.Book
+import com.example.mybook.model.MyFeed
 import kotlinx.android.synthetic.main.fragment_calendar.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -100,13 +102,13 @@ class CalendarFragment : Fragment() {
         myBookList.clear()
         Log.d("SIZE",myBook.size.toString())
         for(i in 0 until myBook.size){
-            var year = myBook[i].date.toInt()/10000
-            var month = (myBook[i].date.toInt()%10000)/100
+            var year = myBook[i].date.substring(0, 3).toInt()
+            var month = (myBook[i].date.substring(5,6).toInt())
             //정확한 날짜가지 선택된 경우
-            var day = (myBook[i].date.toInt()%10000)%100
-                if(month == this_month.toInt() && year == this_year.toInt() && day == this_day.toInt()){
-                    myBookList.add(Book(myBook[i].bname,myBook[i].author,0,0,myBook[i].publisher,"null","null","null","null",myBook[i].imageLink))
-                }
+            var day = (myBook[i].date.substring(8,9).toInt())
+            if(month == this_month.toInt() && year == this_year.toInt() && day == this_day.toInt()){
+                myBookList.add(Book(myBook[i].bname,myBook[i].author,0,0,myBook[i].publisher,"null","null","null","null",myBook[i].imageLink))
+            }
         }
         makeLayout()
     }

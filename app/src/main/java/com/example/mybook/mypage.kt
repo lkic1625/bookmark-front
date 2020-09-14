@@ -11,6 +11,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.example.mybook.model.Book
+import com.example.mybook.model.MyFeed
+import com.example.mybook.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.fragment_mypage.*
 
@@ -18,7 +21,7 @@ import kotlinx.android.synthetic.main.fragment_mypage.*
 class mypage : Fragment() {
 
 
-    lateinit var my:User
+    lateinit var my: User
     lateinit var myBook:ArrayList<MyFeed>//나의 책 목록
     lateinit var adapter:sbookAdapter//어댑터
     val SELECT_IMAGE = 9999
@@ -29,7 +32,7 @@ class mypage : Fragment() {
 
     companion object{
         val myFrag = mypage()
-        fun makeProfile(user:User,book:ArrayList<MyFeed>):mypage{
+        fun makeProfile(user: User, book:ArrayList<MyFeed>):mypage{
             myFrag.myF = mypage()
             myFrag.my = user
             myFrag.myBook = book
@@ -81,7 +84,7 @@ class mypage : Fragment() {
     }
 
     fun makeMyList(){//나의 책정보 리스트 만들기
-        var b:Book
+        var b: Book
         b = Book("","",0,0,"","","","","","")
         if(check){
             b = myFrag.myBookList[myFrag.myBookList.size-1]

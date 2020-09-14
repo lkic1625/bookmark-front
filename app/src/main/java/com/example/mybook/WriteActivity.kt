@@ -13,33 +13,33 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.GridLayout
 import android.widget.Toast
+import com.example.mybook.model.Book
+import com.example.mybook.model.MyFeed
+import com.example.mybook.model.User
 import com.example.mybook.retrofit.AuthServiceGenerator
 import com.example.mybook.retrofit.BookmarkServer
 import com.example.mybook.retrofit.ResponsePOJO
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.text.FirebaseVisionCloudTextRecognizerOptions
 import com.google.firebase.ml.vision.text.FirebaseVisionText
 import kotlinx.android.synthetic.main.activity_write.*
-import org.json.JSONArray
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class WriteActivity : AppCompatActivity() {
 
     val SELECT_IMAGE = 9999
     var my_no=-1
-    lateinit var loggedInUser:User
+    lateinit var loggedInUser: User
     lateinit var uri_ocr:Uri
     lateinit var token:String
     var uri_Pic:Uri=Uri.parse("")
-    lateinit var enrol_book:Book
+    lateinit var enrol_book: Book
     var isOCR=false
 
     var searchlist:ArrayList<Book> = ArrayList()
@@ -60,7 +60,7 @@ class WriteActivity : AppCompatActivity() {
     }
 
     fun textSearch(view:View?){
-        Log.d("이효정바보","들어왓다")
+
         writesearch.visibility = VISIBLE
         searchlist.clear()
         fadapter.notifyDataSetChanged()
@@ -88,7 +88,7 @@ class WriteActivity : AppCompatActivity() {
             }else if(searcha==""){//작가만 안 적은 경우 제목과 출판사로 검색
                 apiReturnList=BookAPI.calladvAPI(d_titl = searcht,d_publ = searchp)
             }else{//제목, 작가, 출판사 다 입력한 경우
-                apiReturnList=BookAPI.calladvAPI(d_titl = searcht,d_auth = searcha,d_publ = searchp)
+            apiReturnList=BookAPI.calladvAPI(d_titl = searcht,d_auth = searcha,d_publ = searchp)
             }
 
             for (book in apiReturnList) {
@@ -257,7 +257,7 @@ class WriteActivity : AppCompatActivity() {
     }
 
     fun feedUpload(){
-        var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),"",enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
+        var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),0,enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
 
         val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
         //get user's categories
@@ -282,7 +282,7 @@ class WriteActivity : AppCompatActivity() {
                         Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
                         if (res != null) {
                             Log.v(NORMAL_CODE_RETROFIT, res.toString())
-                            var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),"",enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
+                            var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),0,enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
                             var intent = Intent(applicationContext ,FeedActivity::class.java)
                             //put해주기 나중에
                             intent.putExtra("UPLOAD",tmpFeed)//현재 업로드한 피드 추가해주기

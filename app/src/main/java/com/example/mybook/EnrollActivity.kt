@@ -1,14 +1,13 @@
 package com.example.mybook
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
-import android.text.InputType
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import com.example.mybook.model.MyCatg
+import com.example.mybook.model.User
 import com.example.mybook.retrofit.ResponsePOJO
 import com.example.mybook.retrofit.RetrofitUtility
 import com.example.mybook.security.Hashing
@@ -16,7 +15,6 @@ import kotlinx.android.synthetic.main.activity_enroll.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.io.InputStreamReader
 
 class EnrollActivity : AppCompatActivity() {//회원가입 액티비티
 
@@ -25,8 +23,9 @@ class EnrollActivity : AppCompatActivity() {//회원가입 액티비티
 
     lateinit var newUser:ArrayList<User>//전 액티비티에서 받은 유저 정보
     lateinit var category:ArrayList<MyCatg>//전체 카테고리 목록
-    lateinit var selected_catg:ArrayList<MyCatg>//내가 선택한 카테고리
-    lateinit var my:User
+
+    lateinit var selected_catg:HashSet<MyCatg>//내가 선택한 카테고리
+    lateinit var my: User
     lateinit var adapter: CatgAdapter//카테고리 어댑터
     var id:String = ""
 
@@ -43,7 +42,7 @@ class EnrollActivity : AppCompatActivity() {//회원가입 액티비티
         val categories_name = resources.getStringArray(R.array.categories);
 
         category = arrayListOf()
-        selected_catg = arrayListOf()
+        selected_catg = hashSetOf()
 
         for (i in 10..34){
             val code = (i * 10)

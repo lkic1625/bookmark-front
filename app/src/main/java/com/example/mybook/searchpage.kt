@@ -12,6 +12,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.example.mybook.model.Book
+import com.example.mybook.model.MyFeed
+import com.example.mybook.model.User
 import kotlinx.android.synthetic.main.fragment_searchpage.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -21,14 +24,14 @@ class searchpage : Fragment() {
     var searchlist:ArrayList<Book> = ArrayList()
     lateinit var post:ArrayList<MyFeed>
     lateinit var fadapter:sbookAdapter
-    lateinit var searchingbook:Book//찾는 책
+    lateinit var searchingbook: Book//찾는 책
     lateinit var want:ArrayList<MyFeed>
     lateinit var allwant:ArrayList<MyFeed>
-    lateinit var my:User
+    lateinit var my: User
     val REQ_CODE_SPEECH_INPUT = 5555
 
     companion object{
-        fun makeSearch(post:ArrayList<MyFeed>,u:User,w:ArrayList<MyFeed>,all:ArrayList<MyFeed>):searchpage{
+        fun makeSearch(post:ArrayList<MyFeed>, u: User, w:ArrayList<MyFeed>, all:ArrayList<MyFeed>):searchpage{
             val searchfrag=searchpage()
             searchfrag.post = post
             searchfrag.my = u
@@ -47,7 +50,7 @@ class searchpage : Fragment() {
         return view
     }
     val clickFun:(Book) -> Unit = {//하나의 책을 클릭했을 때
-        searchingbook=Book(it.title,it.author,it.price,it.discount,it.publisher,it.pubdate,it.isbn,it.link,it.description,it.imageLink)
+        searchingbook= Book(it.title,it.author,it.price,it.discount,it.publisher,it.pubdate,it.isbn,it.link,it.description,it.imageLink)
 
         var intent= Intent(this.context,LookBookActivity::class.java)
         intent.putExtra("sbook",searchingbook)
