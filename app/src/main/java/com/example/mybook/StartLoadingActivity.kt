@@ -6,6 +6,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import com.example.mybook.model.MyCatg
+import com.example.mybook.model.MyFeed
+import com.example.mybook.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 
@@ -19,7 +22,7 @@ class StartLoadingActivity : AppCompatActivity() {
     lateinit var allwant:ArrayList<MyFeed>
 
     var check=0//2가되면 인텐트 바꿈
-    var handler:Handler = Handler(){
+    var handler:Handler = Handler{
         when(it.what){
             USER_STOP->{
                 check+=1
@@ -36,7 +39,7 @@ class StartLoadingActivity : AppCompatActivity() {
             CATG_STOP->{
                 check+=1
                 true
-            }
+        }
             else->{
                 false
             }
@@ -107,10 +110,10 @@ class StartLoadingActivity : AppCompatActivity() {
     fun readFeed(){//피드데이터 부름
         db.collection("post").get().addOnCompleteListener {
             if(it.isSuccessful){//성공적이면
-               for(document in it.result!!){
-                   Log.d("ORDER","READFeedStart")
-                   feed.add(MyFeed(document.data["u_no"].toString().toInt(),document.data["uri"].toString(),document.data["bname"].toString(),document.data["author"].toString(),document.data["publisher"].toString(),document.data["content"].toString(),document.data["like_no"].toString(),document.data["imageLink"].toString(),document.data["isbn"].toString(),document.data["date"].toString()))
-               }
+//               for(document in it.result!!){
+//                   Log.d("ORDER","READFeedStart")
+//                   feed.add(MyFeed(document.data["u_no"].toString().toInt(),document.data["uri"].toString(),document.data["bname"].toString(),document.data["author"].toString(),document.data["publisher"].toString(),document.data["content"].toString(),document.data["like_no"].toString(),document.data["imageLink"].toString(),document.data["isbn"].toString(),document.data["date"].toString()))
+//               }
                 Log.d("ORDER","OUTFeed")
                 handler.sendEmptyMessage(FEED_STOP)
             }else{//실패했으면
@@ -122,9 +125,9 @@ class StartLoadingActivity : AppCompatActivity() {
     fun readLetter(){//글귀를 불러옴
         db.collection("letter").get().addOnCompleteListener {
             if(it.isSuccessful){
-                for(document in it.result!!){
-                    letter.add(MyFeed(-1,"",document.data["bname"].toString(),"","",document.data["content"].toString(),"","","",""))
-                }
+//                for(document in it.result!!){
+//                    letter.add(MyFeed(-1,"",document.data["bname"].toString(),"","",document.data["content"].toString(),"","","",""))
+//                }
                 handler.sendEmptyMessage(LETTER_STOP)
             }
         }
@@ -143,12 +146,13 @@ class StartLoadingActivity : AppCompatActivity() {
         }
     }
 
+
     fun readWant(){//원하는 리스트를 가져옴
         db.collection("want").get().addOnCompleteListener {
             if(it.isSuccessful){
-                for(document in it.result!!){
-                    allwant.add(MyFeed(document.data["u_no"].toString().toInt(),"",document.data["bname"].toString(),document.data["author"].toString(),document.data["publisher"].toString(),"","",document.data["imageLink"].toString(),document.data["isbn"].toString(),""))
-                }
+//                for(document in it.result!!){
+//                    allwant.add(MyFeed(document.data["u_no"].toString().toInt(),"",document.data["bname"].toString(),document.data["author"].toString(),document.data["publisher"].toString(),"","",document.data["imageLink"].toString(),document.data["isbn"].toString(),""))
+//                }
                 handler.sendEmptyMessage(WANT_STOP)
             }else{
                 Log.d("ERROR","Error getting documents" + it.exception)

@@ -114,23 +114,23 @@ class mainfeed : Fragment() {
                 my.no,
                 myFrag.data[position].no,
                 {
-                    var res = it.body()
-                    if(res != null){
-                        if(it.code() == 200) myFrag.data[position].like += 1
-                        Log.v(ServiceExecutor.NORMAL_CODE_RETROFIT, res.message);
+                        var res = it.body()
+                        if(res != null){
+                        Toast.makeText(activity!!.applicationContext, "이미 좋아요를 누른 게시글입니다.", Toast.LENGTH_SHORT).show()
+                        Log.e(ServiceExecutor.ERROR_CODE_RETROFIT, res.message)
                     }
                 },
                 {
                     var res = it.body()
                     if(res != null){
-                        Toast.makeText(activity!!.applicationContext, "서버 에러 잠시 후 다시 시도해주세요", Toast.LENGTH_SHORT).show()
-                        Log.e(ServiceExecutor.ERROR_CODE_RETROFIT, res.message)
+                        if(it.code() == 201) myFrag.data[position].like += 1
+                        myFrag.initlayout()
+                        Log.v(ServiceExecutor.NORMAL_CODE_RETROFIT, res.message);
                     }
                 }
             )
-            myFrag.initlayout()
+
         }
-        initlayout()
 
     }
 

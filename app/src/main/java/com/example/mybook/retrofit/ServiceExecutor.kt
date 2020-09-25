@@ -21,7 +21,7 @@ class ServiceExecutor {
                         Log.e(ERROR_CODE_RETROFIT, t.toString())
                     }
                     override fun onResponse(call: Call<ResponsePOJO>, response: Response<ResponsePOJO>) {
-                        if (response.code() == 200) {
+                        if (response.code() == 201) {
                             successCallback(response)
                         } else {
                             errorCallback(response)

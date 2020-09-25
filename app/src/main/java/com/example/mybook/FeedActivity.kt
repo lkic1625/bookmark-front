@@ -66,7 +66,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_feed)
-
+        init()
         fab_open= AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fab_open)
         fab_close= AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fab_close)
 
@@ -89,7 +89,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
         indicator.setViewPager(vpPager)
         //사진 접근 허용,마이크 및 인터넷
         initPermission()
-        init()
+
     }
 
     fun init(){
@@ -103,43 +103,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
         allwant = ArrayList()
         want = ArrayList()
 
-        ServiceExecutor.getFeedsByUserId(token, my.no,
-            {response ->
-                Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT)
-                    .show()
-            },
-            {response ->
-                if (response.code() == 200) {
-                    val res = response.body()
-                    Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
-                    if (res != null) {
-                        val jsonArray = JSONArray(res.payload)
-                        for(i in 0..jsonArray.length() - 1){
-                            myFeedArr.add(
-                                MyFeed(
-                                    no = jsonArray.getJSONObject(i).getInt("id"),
-                                    author = jsonArray.getJSONObject(i).getString("author"),
-                                    contents = jsonArray.getJSONObject(i).getString("contents"),
-                                    imgsrc = jsonArray.getJSONObject(i).getString("imgUri"),
-                                    date = jsonArray.getJSONObject(i).getString("createdAt"),
-                                    user_id =  my.no,
-                                    like = jsonArray.getJSONObject(i).getInt("like")
-                                )
-                            )
-                        }
-                        Log.v(NORMAL_CODE_RETROFIT, res.toString())
 
-                    } else {
-                        Log.e(ERROR_CODE_RETROFIT, "response body is null")
-                    }
-                } else if (response.code() == 401){
-                    Log.e(ERROR_CODE_RETROFIT, "등록되지 않은 유저")
-                }
-                else {
-                    Log.e(ERROR_CODE_RETROFIT, "response body is null")
-                }
-            }
-        )
         getFeedsByUserId(user_id = my.no)
         getBooksByUserId(user_id = my.no)
 
@@ -275,8 +239,8 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
                     Log.d("PAGER",vpPager.currentItem.toString())
                     searchMake=searchpage.makeSearch(allFeed,my,want,allwant)
                     return searchMake
-                }
-                //mainfeed
+            }
+            //mainfeed
                 1->{
                     Log.d("PAGER",vpPager.currentItem.toString())
                     myFeedMake = mainfeed.makeFeed(myFeedArr,my, token)
@@ -406,6 +370,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
                                     )
                                 )
                             }
+                            refresh()
                             Log.v(NORMAL_CODE_RETROFIT, res.toString())
 
                         } else {

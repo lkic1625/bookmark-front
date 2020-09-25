@@ -48,7 +48,7 @@ class WritingActivity : AppCompatActivity() {
             val contents = editContents.text.toString()
             val writingTitle = editWritingTitle.text.toString()
 
-            var tmpFeed = MyFeed(-1,"",writingTitle,"","",contents,"","","","")
+            var tmpFeed = MyFeed(-1,"",writingTitle,"","",contents,0,"","","")
             var db= FirebaseFirestore.getInstance()
             var input:Map<String,String>
             input = HashMap()
