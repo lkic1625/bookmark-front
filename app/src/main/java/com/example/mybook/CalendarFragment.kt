@@ -18,7 +18,7 @@ import java.util.*
 
 class CalendarFragment : Fragment() {
 
-    lateinit var myBook:ArrayList<MyFeed>//내가 읽은 책 목록
+    lateinit var myBook:ArrayList<Book>//내가 읽은 책 목록
     lateinit var this_year:String
     lateinit var this_month:String
     lateinit var this_day:String
@@ -26,7 +26,7 @@ class CalendarFragment : Fragment() {
     lateinit var myBookList:ArrayList<Book>//나의 책정보를 Book객체로 반환
 
     companion object{
-        fun makeCalendar(my:ArrayList<MyFeed>):CalendarFragment{
+        fun makeCalendar(my:ArrayList<Book>):CalendarFragment{
             var cf = CalendarFragment()
             cf.myBook = my
 
@@ -72,12 +72,12 @@ class CalendarFragment : Fragment() {
         this.calendar.setOnDateChangeListener { view, year, month, dayOfMonth ->
             this_year = year.toString()
             if(month<10){
-                this_month="0"+(month+1).toString()
+                this_month="0"+(month + 1).toString()
             }else{
-                this_month = (month+1).toString()
+                this_month = (month + 1).toString()
             }
             if(dayOfMonth<10){
-                this_day = "0"+dayOfMonth.toString()
+                this_day = "0" + dayOfMonth.toString()
             }else{
                 this_day = dayOfMonth.toString()
             }
@@ -86,28 +86,19 @@ class CalendarFragment : Fragment() {
         }
     }
 
-    fun markBook(){//책이 기록된 날짜를 표시해준다
-        for(i in 0 until myBook.size) {
-            var year = myBook[i].date.toInt()/10000
-            var month = (myBook[i].date.toInt()%10000)/100
-            //정확한 날짜가지 선택된 경우
-            var day = (myBook[i].date.toInt()%10000)%100
-            var cal:Calendar = Calendar.getInstance()
 
-        }
-    }
 
     fun makeMyList(){//나의 책정보 리스트 만들기
         myBookList = arrayListOf()
         myBookList.clear()
         Log.d("SIZE",myBook.size.toString())
         for(i in 0 until myBook.size){
-            var year = myBook[i].date.substring(0, 3).toInt()
-            var month = (myBook[i].date.substring(5,6).toInt())
+            var year = myBook[i].timeRead.substring(0, 4)
+            var month = myBook[i].timeRead.substring(5,7)
             //정확한 날짜가지 선택된 경우
-            var day = (myBook[i].date.substring(8,9).toInt())
-            if(month == this_month.toInt() && year == this_year.toInt() && day == this_day.toInt()){
-                myBookList.add(Book(myBook[i].bname,myBook[i].author,0,0,myBook[i].publisher,"null","null","null","null",myBook[i].imageLink))
+            var day = myBook[i].timeRead.substring(8,10)
+            if(month == this_month && year == this_year && day == this_day){
+                myBookList.add(myBook[i])
             }
         }
         makeLayout()

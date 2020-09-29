@@ -3,6 +3,8 @@ package com.example.mybook
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -11,11 +13,28 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import com.bumptech.glide.Glide
 import com.example.mybook.model.Book
 import com.example.mybook.model.MyFeed
 import com.example.mybook.model.User
+import com.example.mybook.retrofit.ServiceExecutor
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.fragment_mypage.*
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.lang.Exception
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class mypage : Fragment() {
@@ -25,6 +44,8 @@ class mypage : Fragment() {
     lateinit var myBook:ArrayList<MyFeed>//나의 책 목록
     lateinit var adapter:sbookAdapter//어댑터
     val SELECT_IMAGE = 9999
+    var token = "";
+    lateinit var profileImageBitmap:Bitmap
     lateinit var db:FirebaseFirestore
     lateinit var myF:mypage
     lateinit var myBookList:ArrayList<Book>
@@ -32,10 +53,11 @@ class mypage : Fragment() {
 
     companion object{
         val myFrag = mypage()
-        fun makeProfile(user: User, book:ArrayList<MyFeed>):mypage{
+        fun makeProfile(user: User, book:ArrayList<MyFeed>, token :String ):mypage{
             myFrag.myF = mypage()
             myFrag.my = user
             myFrag.myBook = book
+            myFrag.token = token;
             return myFrag
         }
 
@@ -63,7 +85,7 @@ class mypage : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        db = FirebaseFirestore.getInstance()//프로필사진 바꿨을 때 업데이트 하기 위해
+//        db = FirebaseFirestore.getInstance()//프로필사진 바꿨을 때 업데이트 하기 위해
         Log.d("호출","호출")
         makeMyInfo()
         makeMyList()
@@ -71,7 +93,8 @@ class mypage : Fragment() {
 
     fun makeMyInfo(){
         my_user_name.text = myFrag.my.name//이름 설정
-        my_photo.setImageURI(myFrag.my.uri)
+        Glide.with(this).load(my.uri).into(my_photo)
+        //my_photo.setImageURI(myFrag.my.uri)
         user_book.text = myFrag.my.name+"님이 찜한 책"
 
         my_photo.setOnClickListener {
@@ -102,15 +125,14 @@ class mypage : Fragment() {
             myBookList.add(Book(myBook[i].bname,myBook[i].author,0,0,myBook[i].publisher,"null","null","null","null",myBook[i].imageLink))
         }
         Log.d("책SIZE",myBookList.size.toString())
-        adapter=sbookAdapter(myBookList,nothing)//나의 책 정보가 담긴 책 리스트
-        val layoutManager= LinearLayoutManager(activity, LinearLayoutManager.VERTICAL,false)
-        readList.layoutManager=layoutManager
+        adapter=sbookAdapter(myBookList)//나의 책 정보가 담긴 책 리스트
+        val layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL,false)
+        readList.layoutManager = layoutManager
         readList.adapter = adapter
         adapter.notifyDataSetChanged()
     }
 
-    val nothing:(Book) -> Unit = {//아무것도 아님
-    }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {//프로필사진 바꾸는 인텐트
         super.onActivityResult(requestCode, resultCode, data)
@@ -121,6 +143,11 @@ class mypage : Fragment() {
                 my.uri = uri
                 Log.d("MYURI",uri.toString())
                 my_photo.setImageURI(my.uri)
+                try {
+                    profileImageBitmap = BitmapFactory.decodeStream(context!!.contentResolver.openInputStream(uri))
+                } catch(e:FileNotFoundException){
+                    e.printStackTrace()
+                }
                 updateProfile()
             }
         }
@@ -130,34 +157,53 @@ class mypage : Fragment() {
     }
 
     fun updateProfile(){
-        var input:MutableMap<String,String>
-        input = mutableMapOf()
-        input.put("u_no",my.no.toString())
-        input.put("u_id",my.eEmail)
-        input.put("u_pass",my.pass)
-        input.put("u_name",my.name)
-        input.put("uri",my.uri.toString())
-        input.put("catg",my.catg)
 
-        var document_name="" as String
-        db.collection("user").get()
-            .addOnCompleteListener {
-                if(it.isSuccessful){
-                    for(document in it.result!!){
-                        if(document.data["u_no"].toString() == my.no.toString()){//만약 내 정보가 같으면
-                            document_name = document.id
-                            break
-                        }
+        try {
+            val dir = context!!.filesDir;
+            val file = File(dir, dir.name + ".png");
+
+            val bos = ByteArrayOutputStream();
+            profileImageBitmap.compress(Bitmap.CompressFormat.PNG, 0, bos)
+            val bitmapData = bos.toByteArray()
+
+            val fos = FileOutputStream(file);
+            fos.write(bitmapData);
+            fos.flush()
+            fos.close()
+
+            val reqBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+            val body = MultipartBody.Part.createFormData("img", file.name, reqBody)
+            val user_id = (my.no.toString()).toRequestBody("text/plain".toMediaTypeOrNull())
+
+            ServiceExecutor.uploadProfileImage(token, body, my.no,
+                {
+                    var res = it.body()
+                    if(res != null) {
+                        Toast.makeText(
+                            activity!!.applicationContext,
+                            "서버 오류로 잠시 후 다시 시도해주세요.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e(ServiceExecutor.ERROR_CODE_RETROFIT, res.message)
                     }
-                    db.collection("user").document(document_name).set(input as MutableMap<String, Any>)
-                        .addOnSuccessListener {
-                            Log.d("UPDATE","성공")
+                },
+                {
+                    var res = it.body()
+                    if(res != null){
+                        if(it.code() == 201) {
+                            my.uri = Uri.parse(res.payload)
+                            Glide.with(this).load(res.payload).into(my_photo)
                         }
-                        .addOnFailureListener {
-                            Log.e("UPDATE","실패")
-                        }
-                }
-            }
+                        Log.v(ServiceExecutor.NORMAL_CODE_RETROFIT, res.message);
+                    }
+                })
+
+
+
+        } catch (e:Exception){
+            e.printStackTrace()
+        }
+
     }
 
 }

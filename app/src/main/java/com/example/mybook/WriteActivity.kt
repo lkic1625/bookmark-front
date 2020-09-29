@@ -1,6 +1,8 @@
 package com.example.mybook
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -13,20 +15,32 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.GridLayout
 import android.widget.Toast
+import com.bumptech.glide.Glide
 import com.example.mybook.model.Book
 import com.example.mybook.model.MyFeed
 import com.example.mybook.model.User
 import com.example.mybook.retrofit.AuthServiceGenerator
 import com.example.mybook.retrofit.BookmarkServer
 import com.example.mybook.retrofit.ResponsePOJO
+import com.example.mybook.retrofit.ServiceExecutor
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.text.FirebaseVisionCloudTextRecognizerOptions
 import com.google.firebase.ml.vision.text.FirebaseVisionText
 import kotlinx.android.synthetic.main.activity_write.*
+import kotlinx.android.synthetic.main.fragment_mypage.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -38,6 +52,7 @@ class WriteActivity : AppCompatActivity() {
     lateinit var loggedInUser: User
     lateinit var uri_ocr:Uri
     lateinit var token:String
+    var profileImageBitmap: Bitmap? = null
     var uri_Pic:Uri=Uri.parse("")
     lateinit var enrol_book: Book
     var isOCR=false
@@ -126,6 +141,7 @@ class WriteActivity : AppCompatActivity() {
     }
 
     fun init(){
+
         fadapter= sbookAdapter(searchlist,clickFun)
         loggedInUser = intent.getParcelableExtra("USERNO")
         my_no = loggedInUser.no
@@ -183,6 +199,11 @@ class WriteActivity : AppCompatActivity() {
                 }else{
                     uri_Pic = Uri.parse(data!!.data.toString())
                     myUploadPic.setImageURI(uri_Pic)
+                    try {
+                        profileImageBitmap = BitmapFactory.decodeStream(applicationContext.contentResolver.openInputStream(uri_Pic))
+                    } catch(e: FileNotFoundException){
+                        e.printStackTrace()
+                    }
                 }
             }
         }
@@ -257,47 +278,70 @@ class WriteActivity : AppCompatActivity() {
     }
 
     fun feedUpload(){
-        var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),0,enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
+        try {
+            val dir = applicationContext.filesDir;
+            val file = File(dir, dir.name + ".png");
 
-        val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
-        //get user's categories
-        AuthService.uploadFeed(
-            user_id = my_no,
-            author = loggedInUser.name,
-            contents = input_content.text.toString(),
-            imgUri = uri_Pic.toString(),
-            book_author = enrol_book.author,
-            book_name =  enrol_book.title,
-            book_isbn = enrol_book.isbn,
-            book_publisher = enrol_book.publisher
-        ).enqueue(
-            object : Callback<ResponsePOJO> {
-                override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
-                    Log.e(ERROR_CODE_RETROFIT, t.toString())
-                    Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-                }
-                override fun onResponse(call: Call<ResponsePOJO>, response: Response<ResponsePOJO>) {
-                    if (response.code() == 200) {
-                        val res = response.body()
-                        Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
-                        if (res != null) {
-                            Log.v(NORMAL_CODE_RETROFIT, res.toString())
-                            var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),0,enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
-                            var intent = Intent(applicationContext ,FeedActivity::class.java)
-                            //put해주기 나중에
-                            intent.putExtra("UPLOAD",tmpFeed)//현재 업로드한 피드 추가해주기
-                            setResult(RESULT_OK,intent)
-                            finish()
-                        } else {
-                            Log.e(ERROR_CODE_RETROFIT, "response body is null")
+            val bos = ByteArrayOutputStream();
+            if(profileImageBitmap != null)
+                profileImageBitmap!!.compress(Bitmap.CompressFormat.PNG, 0, bos)
+            val bitmapData = bos.toByteArray()
+
+            val fos = FileOutputStream(file);
+            fos.write(bitmapData);
+            fos.flush()
+            fos.close()
+
+            val reqBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+            val body = MultipartBody.Part.createFormData("img", file.name, reqBody)
+
+            val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
+            //get user's categories
+            AuthService.uploadFeed(
+                image=body,
+                user_id = my_no,
+                author = loggedInUser.name,
+                contents = input_content.text.toString(),
+                imgUri = uri_Pic.toString(),
+                book_author = enrol_book.author,
+                book_name =  enrol_book.title,
+                book_isbn = enrol_book.isbn,
+                book_publisher = enrol_book.publisher,
+                book_imageLink = enrol_book.imageLink
+            ).enqueue(
+                object : Callback<ResponsePOJO> {
+                    override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
+                        Log.e(ERROR_CODE_RETROFIT, t.toString())
+                        Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                    }
+                    override fun onResponse(call: Call<ResponsePOJO>, response: Response<ResponsePOJO>) {
+                        if (response.code() == 200) {
+                            val res = response.body()
+                            Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
+                            if (res != null) {
+                                Log.v(NORMAL_CODE_RETROFIT, res.toString())
+                                var tmpFeed = MyFeed(my_no,uri_Pic.toString(),enrol_book.title,enrol_book.author,enrol_book.publisher,input_content.text.toString(),0,enrol_book.imageLink,enrol_book.isbn,myYear+myMonth+myDay)
+                                var intent = Intent(applicationContext ,FeedActivity::class.java)
+                                //put해주기 나중에
+                                intent.putExtra("UPLOAD",tmpFeed)//현재 업로드한 피드 추가해주기
+                                setResult(RESULT_OK,intent)
+                                finish()
+                            } else {
+                                Log.e(ERROR_CODE_RETROFIT, "response body is null")
+                            }
+                        }
+                        else {
+                            Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                            Log.e(ERROR_CODE_RETROFIT, response.message())
                         }
                     }
-                    else {
-                        Toast.makeText(applicationContext, "서버 오류로 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-                        Log.e(ERROR_CODE_RETROFIT, response.message())
-                    }
-                }
-            })
+                })
+
+
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
+
     }
 
     fun PicBtn(view:View?){//사진 업로드

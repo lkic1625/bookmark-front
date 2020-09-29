@@ -13,7 +13,8 @@ data class MyFeed (var no:Int = 0,
                    var imageLink:String="",
                    var isbn:String ="",
                    var date:String="",
-                   var user_id:Int = -1):Parcelable{
+                   var user_id:Int = -1,
+                    var bauthor:String = ""):Parcelable{
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readString(),
@@ -25,7 +26,8 @@ data class MyFeed (var no:Int = 0,
         parcel.readString(),
         parcel.readString(),
         parcel.readString(),
-        parcel.readInt()
+        parcel.readInt(),
+        parcel.readString()
     ) {
     }
 
@@ -41,6 +43,7 @@ data class MyFeed (var no:Int = 0,
         parcel.writeString(isbn)
         parcel.writeString(date)
         parcel.writeInt(user_id)
+        parcel.writeString(bauthor)
     }
 
     override fun describeContents(): Int {

@@ -55,13 +55,7 @@ class WritingActivity : AppCompatActivity() {
             input.put("content",tmpFeed.contents)
             input.put("bname",tmpFeed.bname)
 
-            db.collection("letter").add(input)
-                .addOnSuccessListener {
-                    Log.d("SUCCESS","게시글 등록 성공")
-                }
-                .addOnFailureListener {
-                    Log.d("FAULURE","게시글 등록 실패")
-                }
+
             var intent = Intent(this,FeedActivity::class.java)
             //put해주기 나중에
             intent.putExtra("UPLOAD_LETTER",tmpFeed)//현재 업로드한 글귀 추가

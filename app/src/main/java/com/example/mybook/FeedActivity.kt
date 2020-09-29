@@ -16,6 +16,7 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
+import com.example.mybook.model.Book
 import com.example.mybook.model.MyFeed
 import com.example.mybook.model.User
 import com.example.mybook.retrofit.AuthServiceGenerator
@@ -35,7 +36,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var user:ArrayList<User>//모든 피드
     lateinit var allFeed:ArrayList<MyFeed>//모든 피드
     lateinit var myFeedArr:ArrayList<MyFeed>
-    lateinit var myBook:ArrayList<MyFeed>//나의 책 목록
+    lateinit var myBook:ArrayList<Book>//나의 책 목록
     lateinit var letter:ArrayList<MyFeed>//글귀 목록
     lateinit var allwant:ArrayList<MyFeed>//모든 사람들의 찜 목록
     lateinit var want:ArrayList<MyFeed>
@@ -67,8 +68,8 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_feed)
         init()
-        fab_open= AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fab_open)
-        fab_close= AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fab_close)
+        fab_open= AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open)
+        fab_close= AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_close)
 
         fab=findViewById(R.id.fab)
         fab1=findViewById(R.id.fab1)
@@ -190,7 +191,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(p0: View?) {
 //        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        var id=p0!!.getId()
+        var id=p0!!.id;
         when(id){
             R.id.fab-> {
                 anim()
@@ -237,19 +238,19 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
                 //search
                 0->{
                     Log.d("PAGER",vpPager.currentItem.toString())
-                    searchMake=searchpage.makeSearch(allFeed,my,want,allwant)
+                    searchMake=searchpage.makeSearch(allFeed, my, want, allwant, token)
                     return searchMake
-            }
+                }
             //mainfeed
                 1->{
                     Log.d("PAGER",vpPager.currentItem.toString())
-                    myFeedMake = mainfeed.makeFeed(myFeedArr,my, token)
+                    myFeedMake = mainfeed.makeFeed(myFeedArr ,my, token)
                     return myFeedMake
                 }
                 //mypage
                 2->{
                     Log.d("PAGER",vpPager.currentItem.toString())
-                     myProfile = mypage.makeProfile(my,want)//나의 프로필 정보 ,내가 찜한 책 정보를
+                     myProfile = mypage.makeProfile(my,want, token)//나의 프로필 정보 ,내가 찜한 책 정보를
                     return myProfile
                 }
                 3->{//캘린더
@@ -356,10 +357,14 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
                         val res = response.body()
                         Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
                         if (res != null) {
+                            myFeedArr.clear()
                             val jsonArray = JSONArray(res.payload)
                             for(i in 0..jsonArray.length() - 1){
                                 myFeedArr.add(
                                     MyFeed(
+                                        bname = jsonArray.getJSONObject(i).getJSONObject("Book").getString("name"),
+                                        bauthor = jsonArray.getJSONObject(i).getJSONObject("Book").getString("author"),
+                                        imageLink = jsonArray.getJSONObject(i).getJSONObject("Book").getString("imageLink"),
                                         no = jsonArray.getJSONObject(i).getInt("id"),
                                         author = jsonArray.getJSONObject(i).getString("author"),
                                         contents = jsonArray.getJSONObject(i).getString("contents"),
@@ -391,7 +396,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
     fun getBooksByUserId(user_id: Int){
         val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
         //get user's categories
-        AuthService.getFeedsByUserId(user_id).enqueue(
+        AuthService.getBooksByUserId(user_id).enqueue(
             object : Callback<ResponsePOJO> {
                 override fun onFailure(call: Call<ResponsePOJO>, t: Throwable) {
                     Log.e(ERROR_CODE_RETROFIT, t.toString())
@@ -404,15 +409,13 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
                         Toast.makeText(applicationContext, "로그인", Toast.LENGTH_SHORT).show()
                         if (res != null) {
                             val jsonArray = JSONArray(res.payload)
-                            for(i in 0..jsonArray.length() - 1){
+                            for(i in 0 until jsonArray.length()){
                                 myBook.add(
-                                    MyFeed(
-                                        no = jsonArray.getJSONObject(i).getInt("id"),
+                                    Book(
+                                        title = jsonArray.getJSONObject(i).getString("name"),
                                         author = jsonArray.getJSONObject(i).getString("author"),
-                                        contents = jsonArray.getJSONObject(i).getString("contents"),
-                                        imgsrc = jsonArray.getJSONObject(i).getString("imgUri"),
-                                        date = jsonArray.getJSONObject(i).getString("createdAt"),
-                                        user_id =  my.no
+                                        imageLink = jsonArray.getJSONObject(i).getString("imageLink"),
+                                        timeRead = jsonArray.getJSONObject(i).getString("createdAt")
                                     )
                                 )
                             }

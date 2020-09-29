@@ -6,10 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
 import com.example.mybook.model.Book
 import com.koushikdutta.ion.Ion
+import kotlinx.coroutines.withContext
 
-class sbookAdapter (val sblist:ArrayList<Book>, val click:(Book)->Unit):RecyclerView.Adapter<sbookAdapter.ViewHolder>(){
+class sbookAdapter (val sblist:ArrayList<Book>, val click:(Book)->Unit = {}):RecyclerView.Adapter<sbookAdapter.ViewHolder>(){
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int): sbookAdapter.ViewHolder {
 //        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -28,14 +30,15 @@ class sbookAdapter (val sblist:ArrayList<Book>, val click:(Book)->Unit):Recycler
             p0.sb_img.visibility= View.INVISIBLE
         }
         else{
-            Ion.with(p0.sb_img).load(sblist.get(p1).imageLink)
+            Glide.with(p0.itemView).load(sblist[p1].imageLink).into(p0.sb_img)
+
         }
         p0.itemView.setOnClickListener {
             click(sblist[p1])
         }
-        p0.sb_title.text=sblist.get(p1).title
-        p0.sb_author.text=sblist.get(p1).author
-        p0.sb_publish.text=sblist.get(p1).publisher
+        p0.sb_title.text= sblist[p1].title
+        p0.sb_author.text= sblist[p1].author
+        p0.sb_publish.text= sblist[p1].publisher
     }
 
     inner class ViewHolder(i: View):RecyclerView.ViewHolder(i){

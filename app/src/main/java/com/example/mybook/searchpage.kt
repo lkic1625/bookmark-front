@@ -28,15 +28,17 @@ class searchpage : Fragment() {
     lateinit var want:ArrayList<MyFeed>
     lateinit var allwant:ArrayList<MyFeed>
     lateinit var my: User
+    lateinit var token: String
     val REQ_CODE_SPEECH_INPUT = 5555
 
     companion object{
-        fun makeSearch(post:ArrayList<MyFeed>, u: User, w:ArrayList<MyFeed>, all:ArrayList<MyFeed>):searchpage{
+        fun makeSearch(post:ArrayList<MyFeed>, u: User, w:ArrayList<MyFeed>, all:ArrayList<MyFeed>, token:String):searchpage{
             val searchfrag=searchpage()
             searchfrag.post = post
             searchfrag.my = u
             searchfrag.want = w
             searchfrag.allwant = all
+            searchfrag.token = token
             return searchfrag
         }
     }
@@ -58,6 +60,7 @@ class searchpage : Fragment() {
         intent.putExtra("MY",my)
         intent.putParcelableArrayListExtra("WANT",want)//내가 찜한 목록
         intent.putParcelableArrayListExtra("ALLWANT",allwant)
+        intent.putExtra("token",token);
         startActivity(intent)
     }
 

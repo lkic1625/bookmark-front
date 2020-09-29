@@ -8,8 +8,10 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
 import com.example.mybook.model.MyFeed
 import com.koushikdutta.ion.Ion
+import kotlinx.android.synthetic.main.fragment_mypage.*
 
 class MyFeedAdapter(val feed:ArrayList<MyFeed>, val clickFun: (position: Int) -> Unit = {})
     : RecyclerView.Adapter<MyFeedAdapter.ViewHolder>()
@@ -51,7 +53,8 @@ class MyFeedAdapter(val feed:ArrayList<MyFeed>, val clickFun: (position: Int) ->
                 p0.bimg.visibility = GONE
             }else{
                 p0.bimg.visibility = VISIBLE
-                Ion.with(p0.bimg).load(feed.get(p1).imgsrc)
+                Glide.with(p0.bimg).load(feed.get(p1).imgsrc).into(p0.bimg)
+
             }
             p0.like.text = "좋아요 ${like}"
             p0.like.setOnClickListener {

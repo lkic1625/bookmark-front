@@ -6,9 +6,11 @@ import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import com.bumptech.glide.Glide
 import com.example.mybook.model.Book
 import com.example.mybook.model.MyFeed
 import com.example.mybook.model.User
+import com.example.mybook.retrofit.ServiceExecutor
 import com.google.firebase.firestore.FirebaseFirestore
 import com.koushikdutta.ion.Ion
 import kotlinx.android.synthetic.main.activity_look_book.*
@@ -21,6 +23,7 @@ class LookBookActivity : AppCompatActivity() {
     lateinit var my: User
     lateinit var want:ArrayList<MyFeed>
     lateinit var allwant:ArrayList<MyFeed>
+    lateinit var token:String
     var postlist:ArrayList<MyFeed> = ArrayList()
     lateinit var padapter:MyFeedAdapter
 
@@ -34,13 +37,15 @@ class LookBookActivity : AppCompatActivity() {
     fun getdata(){
         searchedBook= intent.extras.getSerializable("sbook") as Book//현재 책 정보
         allPost = getIntent().getParcelableArrayListExtra("ALLPOST")//모든 피드의 정보
-        my = getIntent().getParcelableExtra("MY")//나의 정보
+        my = intent.getParcelableExtra("MY")//나의 정보
         want = getIntent().getParcelableArrayListExtra("WANT")//나의 찜 정보
         allwant = getIntent().getParcelableArrayListExtra("ALLWANT")
+        token = intent.getStringExtra("token")
         setlayout()
     }
     fun setlayout(){
-        Ion.with(lb_img).load(searchedBook.imageLink)
+        Glide.with(applicationContext).load(searchedBook.imageLink).into(lb_img)
+
         lb_title.text=searchedBook.title
         lb_author.text=searchedBook.author
         lb_publish.text=searchedBook.publisher
@@ -51,15 +56,7 @@ class LookBookActivity : AppCompatActivity() {
         getpost()
     }
     fun getpost(){
-        for(i in 0 until allPost.size){
-            if(allPost[i].isbn==searchedBook.isbn){
-                //검색한 책의 isbn과 post DB에 있는 isbn이 일치하면 리스트에 붙이기
-                 postlist.add(allPost[i])
-                //들어가는 거 확인함
-            }
-        }
-        padapter= MyFeedAdapter(postlist)
-        lb_rview.adapter=padapter
+        ServiceExecutor.getFeedByBookId(token, book_id = 1)
     }
 
     fun addwant(view: View?){

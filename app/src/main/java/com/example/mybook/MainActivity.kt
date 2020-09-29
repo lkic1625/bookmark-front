@@ -3,6 +3,7 @@ package com.example.mybook
 
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -81,7 +82,7 @@ class MainActivity : AppCompatActivity() {//로그인 액티비티
                          loggedInUser.eEmail = jsonObj.getString("email")
                          loggedInUser.name = jsonObj.getString("name")
                          loggedInUser.no = jsonObj.getInt("id")
-
+                         loggedInUser.uri = Uri.parse(jsonObj.getString("profileUri"))
 
                          token = res.token
                          Log.v(NORMAL_CODE_RETROFIT, res.toString() + "login complete")
