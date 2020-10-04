@@ -107,7 +107,7 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
 
         getFeedsByUserId(user_id = my.no)
         getBooksByUserId(user_id = my.no)
-
+        getWishByUserId(user_id = my.no)
 //        user = getIntent().getParcelableArrayListExtra("USER")
 //        allFeed = getIntent().getParcelableArrayListExtra("FEED")//모든 피드정보
 //        myFeedArr = getIntent().getParcelableArrayListExtra("MYFEED")//나의 피드 정보
@@ -393,6 +393,40 @@ class FeedActivity : AppCompatActivity(), View.OnClickListener {
             })
 
     }
+
+    fun getWishByUserId(user_id: Int){
+        ServiceExecutor.getWishByUserId(token, user_id,
+            {
+                val res = it.body()
+                if(res != null){
+                    Toast.makeText(applicationContext, "찜 목록 불러오기를 실패했습니다.", Toast.LENGTH_SHORT).show()
+                    Log.e(ServiceExecutor.ERROR_CODE_RETROFIT, res.message)
+                }
+            },
+            {
+                val res = it.body()
+                if(res != null){
+                    val jsonArray = JSONArray(res.payload)
+                    for(i in 0 until jsonArray.length()){
+                        want.add(
+//                            want.add(MyFeed(my.no,searchedBook.link,searchedBook.title,searchedBook.author,searchedBook.publisher, "",0,searchedBook.imageLink,searchedBook.isbn,""))
+                            MyFeed(my.no, "",
+                                jsonArray.getJSONObject(i).getString("name"),
+                                jsonArray.getJSONObject(i).getString("author"),
+                                jsonArray.getJSONObject(i).getString("publisher"),
+                                "",
+                                0,
+                                jsonArray.getJSONObject(i).getString("imageLink"),
+                                jsonArray.getJSONObject(i).getString("isbn")
+                            )
+                        )
+                    }
+                    Log.e(ServiceExecutor.NORMAL_CODE_RETROFIT, res.message)
+                }
+            }
+        )
+    }
+
     fun getBooksByUserId(user_id: Int){
         val AuthService = AuthServiceGenerator.createService(BookmarkServer::class.java, token)
         //get user's categories

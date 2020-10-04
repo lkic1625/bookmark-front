@@ -60,18 +60,35 @@ class LookBookActivity : AppCompatActivity() {
     }
 
     fun addwant(view: View?){
+
         //내가 찜한 목록에 있는지 비교
         var check = true
-        for(i in 0 until want.size){
-            if(want[i].isbn == searchedBook.isbn ){
-                check = false//같은 책이 이미 있음
-                Toast.makeText(this,"이미 찜한 책입니다!",Toast.LENGTH_SHORT).show()
-            }
-        }
+
         if(check){//같은 책이 없음
             Toast.makeText(this,"♥",Toast.LENGTH_SHORT).show()
-            var db = FirebaseFirestore.getInstance()
+            ServiceExecutor.wish(token, my.no, searchedBook,
+                {
+                    var res = it.body()
+                    if(res != null) {
+                        Toast.makeText(
+                            applicationContext,
+                            "네트워크 오류",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e(ServiceExecutor.ERROR_CODE_RETROFIT, res.message)
+                    }
+                },
+                {
+                    var res = it.body()
+                    if(res != null) {
+                        if(it.code() == 201 ) {
+                            want.add(MyFeed(my.no,searchedBook.link,searchedBook.title,searchedBook.author,searchedBook.publisher, "",0,searchedBook.imageLink,searchedBook.isbn,""))
+                            mypage.send(want)
+                            Log.e(ServiceExecutor.NORMAL_CODE_RETROFIT, res.message)
 
+                        }
+                    }
+                });
             var added:Map<String,String>
             added = hashMapOf()
             added.put("author",searchedBook.author)
@@ -81,20 +98,10 @@ class LookBookActivity : AppCompatActivity() {
             added.put("publisher",searchedBook.publisher)
             added.put("u_no",my.no.toString())
 
-            allwant.add(MyFeed(my.no,searchedBook.link,searchedBook.title,searchedBook.author,searchedBook.publisher, "",0,searchedBook.imageLink,searchedBook.isbn,""))
-            want.add(MyFeed(my.no,searchedBook.link,searchedBook.title,searchedBook.author,searchedBook.publisher, "",0,searchedBook.imageLink,searchedBook.isbn,""))
-
-            db.collection("want").add(added).addOnSuccessListener {
-                Log.d("WANT추가 성공","WANT 추가 ID : "+it.id)
-            }.addOnFailureListener {
-                Log.e("WANT추가 실패","WANT 추가 실패 :"+it)
-            }
-
-
-          //  var mypage=mypage()
+            //  var mypage=mypage()
            // var bundle:Bundle=Bundle()
            // bundle.putParcelableArrayList("WANT_DATA",want)
-            mypage.send(want)
+
           //  Log.d("번들비지라마",bundle.toString())
            // mypage.setArguments(bundle)
 

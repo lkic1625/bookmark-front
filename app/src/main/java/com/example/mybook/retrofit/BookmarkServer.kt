@@ -31,7 +31,16 @@ interface BookmarkServer {
         @Field("user_pw") pw: String
     ): Call<ResponsePOJO>
 
-
+    @POST("v1/board/books/wish")
+    @FormUrlEncoded
+    fun wish(
+        @Field("user_id") user_id: Int,
+        @Field("book_author") book_author: String,
+        @Field("book_name") book_name:String,
+        @Field("book_isbn") book_isbn:String,
+        @Field("book_publisher") book_publisher:String,
+        @Field("book_imageLink") book_imageLink:String
+    ): Call<ResponsePOJO>
 
     @POST("v1/board/feeds")
     @Multipart
@@ -86,6 +95,10 @@ interface BookmarkServer {
         @Path("user_id") id:Int
     ): Call<ResponsePOJO>
 
+    @GET("v1/board/books/wish/user/{user_id}")
+    fun getWishByUserId(
+        @Path("user_id") id:Int
+    ): Call<ResponsePOJO>
 
 
 
